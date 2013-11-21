@@ -8,7 +8,36 @@ var width = 320,
                         
         c.width = width;
         c.height = height;
+        
+function startMenu(){
+		var buttons = [];
+  		var grd=ctx.createLinearGradient(0,0,width,height);
+  		grd.addColorStop(1,'#fff');
+  		grd.addColorStop(0,'#ffffcc');
+ 	 	ctx.fillStyle = grd;
+ 	 	ctx.fillRect(0, 0, width, height);
+ 	 	
+};
+// Button object
+function Button(x, y, w, h, state, image, text) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.state = state;
+    this.imageShift = 0;
+    this.image = image;
+    this.text = text;
+}
 
+// Draw Button function
+function drawButton(ctx, button) {
+    // draw button image
+    ctx.drawImage(button.image, 0, button.imageShift, button.w, button.h, button.x, button.y, button.w, button.h);
+
+    // and text
+    ctx.fillText(button.text, button.x + button.w / 2, 5 + button.y + button.h / 2);
+}
 
 var clear = function(){
         ctx.fillStyle = '#d0e7f9';
