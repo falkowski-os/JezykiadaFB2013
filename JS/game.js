@@ -1,3 +1,6 @@
+/**
+ * @author Maciej Fałkowski
+ */
 var width = 450, 
         height = 600,
         gLoop,
@@ -345,6 +348,8 @@ var GameLoop = function(){
 
         var GameOver = function(){
         		var data = points;
+        		var secoundname = "";
+        		var mail = "";
         		$.post("php/result.php",{postpoints:data,postname:name,postsecoundname:secoundname,postmail:mail});
                 state = false;
                 clearTimeout(gLoop);
