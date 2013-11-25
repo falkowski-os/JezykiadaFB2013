@@ -1,5 +1,5 @@
-var width = 320, 
-        height = 500,
+var width = 450, 
+        height = 600,
         gLoop,
         points = 0,
         state = true,
@@ -8,36 +8,63 @@ var width = 320,
                         
         c.width = width;
         c.height = height;
-        
+var userPlayer = new Image();
+userPlayer.src = "gfx/ges.png";
+function Button(x,y, width, height, text, colorBackground,colorText,ctx){
+	this.x = x;
+	this.y = y;
+	this.width = width;
+	this.height = height;
+	this.text = text;
+	this.colorBackground = colorBackground;
+	this.colorText = colorText;
+	this.ctx = ctx;
+	this.drawButton = function () {
+	  this.ctx.fillStyle = this.colorBackground;
+	  this.ctx.fillRect(this.x, this.y, this.width,this.height);
+	  this.ctx.fillStyle = this.colorText;
+	  this.ctx.font = "bold 16px Arial, sans-serif";
+	  var textSize = ctx.measureText(this.text);
+	  var XCord = (this.width/2) - (textSize.width/2);
+	  this.ctx.fillText(this.text,XCord+this.x,(this.height/2)+this.y+5);
+	};
+};
+
+var buttons = [];
+
+//Menu created      
 function startMenu(){
 		var buttons = [];
-  		var grd=ctx.createLinearGradient(0,0,width,height);
-  		grd.addColorStop(1,'#fff');
-  		grd.addColorStop(0,'#ffffcc');
- 	 	ctx.fillStyle = grd;
+ 	 	ctx.fillStyle = '#e0e8f5';
  	 	ctx.fillRect(0, 0, width, height);
  	 	
+ 	 	buttons.push(new Button(width/2-(width/4),height/3,width/2,height/20,'Zacznij grę','#000','#fff',ctx));
+ 	 	buttons.push(new Button(width/2-(width/4),buttons[0].y+buttons[0].height+10,width/2,height/20,'Regulamin','#000','#fff',ctx));
+ 	 	buttons.push(new Button(width/2-(width/4),buttons[1].y+buttons[1].height+10,width/2,height/20,'Jak grać?','#000','#fff',ctx));
+ 	 	buttons.push(new Button(width/2-(width/4),buttons[2].y+buttons[2].height+10,width/2,height/20,'Najlepszy gracz','#000','#fff',ctx));
+ 	 	for (var i=0; i < buttons.length; i++) {
+			buttons[i].drawButton();
+		  };
+		 c.addEventListener('click',onclicks, false);
+		 // Onmouseup event handler
+		function onclicks(event){
+		   	event = event || window.event;
+		
+		    var canvas = document.getElementById('c'),
+		    x = event.pageX - canvas.offsetLeft,
+		    y = event.pageY - canvas.offsetTop;
+		    for( var i=0; i < buttons.length; i++){
+		    	if(buttons[i].x < x && (buttons[i].x+ buttons[i].width) > x && buttons[i].y < y && (buttons[i].y + buttons[i].height) >y)
+		    		if(buttons[i].text === 'Zacznij grę')
+		    			GameLoop();
+		    }
+		    
+		    
+		}
 };
-// Button object
-function Button(x, y, w, h, state, image, text) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.state = state;
-    this.imageShift = 0;
-    this.image = image;
-    this.text = text;
-}
 
-// Draw Button function
-function drawButton(ctx, button) {
-    // draw button image
-    ctx.drawImage(button.image, 0, button.imageShift, button.w, button.h, button.x, button.y, button.w, button.h);
 
-    // and text
-    ctx.fillText(button.text, button.x + button.w / 2, 5 + button.y + button.h / 2);
-}
+
 
 var clear = function(){
         ctx.fillStyle = '#d0e7f9';
@@ -78,122 +105,126 @@ var MoveCircles = function(e){
 };
 
 var player = new (function(){
-        var that = this;
-        that.image = new Image();
+  var that = this;
+  that.image = new Image();
 
-        that.image.src = "gfx/angel.png";
-        that.width = 65;
-        that.height = 95;
-        that.frames = 1;
-        that.actualFrame = 0;
-        that.X = 0;
-        that.Y = 0;        
+  that.image.src = "gfx/ges.png";
+  that.width = 65;
+  that.height = 90;
+  that.frames = 1;
+  that.actualFrame = 0;
+  that.X = 0;
+  that.Y = 0;  
 
-        that.isJumping = false;
-        that.isFalling = false;
-        that.jumpSpeed = 0;
-        that.fallSpeed = 0;
-        
+  that.isJumping = false;
+  that.isFalling = false;
+  that.jumpSpeed = 0;
+  that.fallSpeed = 0;
+  
     that.jump = function() {
-                if (!that.isJumping && !that.isFalling) {
-                        that.fallSpeed = 0;
-                        that.isJumping = true;
-                        that.jumpSpeed = 17;
-                }
-       };
+    if (!that.isJumping && !that.isFalling) {
+      that.fallSpeed = 0;
+      that.isJumping = true;
+      that.jumpSpeed = 17;
+    }
+  };
+  
+  that.checkJump = function() {
+    //a lot of changes here
         
-        that.checkJump = function() {
-                
-                                
-                if (that.Y > height*0.4) {
-                        that.setPosition(that.X, that.Y - that.jumpSpeed);                
-                }
-                else {
-                        if (that.jumpSpeed > 10) 
-                                points++;
-                        
-                        MoveCircles(that.jumpSpeed * 0.5);
-                        
-                        platforms.forEach(function(platform, ind){
-                                platform.y += that.jumpSpeed;
+    if (that.Y > height*0.4) {
+      that.setPosition(that.X, that.Y - that.jumpSpeed);    
+    }
+    else {
+      if (that.jumpSpeed > 10) 
+        points++;
+      // if player is in mid of the gamescreen
+      // dont move player up, move obstacles down instead
+      MoveCircles(that.jumpSpeed * 0.5);
+      
+      platforms.forEach(function(platform, ind){
+        platform.y += that.jumpSpeed;
+        
+        //if (e.posY<highestObst) highestObst = e.posY; //distance of highest obstacle
+        // necessary for creating new obst.
+        
+        if (platform.y > height) {
+          var type = ~~(Math.random() * 5);
+          if (type == 0) 
+            type = 1;
+          else 
+            type = 0;
+          //platforms[ind] = new Platform(Math.random() * (width - 70), e.y - height, type);
+          platforms[ind] = new Platform(Math.random() * (width - platformWidth), platform.y - height, type);
+        }
+      });
+    };
+    
+    
+    that.jumpSpeed--;
+    if (that.jumpSpeed == 0) {
+      that.isJumping = false;
+      that.isFalling = true;
+      that.fallSpeed = 1;
+    }
+  
+  };
+  
+  that.fallStop = function(){
+    that.isFalling = false;
+    that.fallSpeed = 0;
+    that.jump();  
+  };
+  
+  that.checkFall = function(){
+    if (that.Y < height - that.height) {
+      that.setPosition(that.X, that.Y + that.fallSpeed);
+      that.fallSpeed++;
+    } else {
+      if (points == 0) 
+        that.fallStop();
+      else 
+        GameOver();
+    }
+  };
+  
+  that.moveLeft = function(){
+    if (that.X > 0) {
+      that.setPosition(that.X - 5, that.Y);
+    }
+  };
+  
+  that.moveRight = function(){
+    if (that.X + that.width < width) {
+      that.setPosition(that.X + 5, that.Y);
+    }
+  };
 
-                                if (platform.y > height) {
-                                        var type = ~~(Math.random() * 5);
-                                        if (type == 0) 
-                                                type = 1;
-                                        else 
-                                                type = 0;
-                                        
-                                        platforms[ind] = new Platform(Math.random() * (width - platformWidth), platform.y - height, type);
-                                }
-                        });
-                }
-                
-                
-                that.jumpSpeed--;
-                if (that.jumpSpeed == 0) {
-                        that.isJumping = false;
-                        that.isFalling = true;
-                        that.fallSpeed = 1;
-                }
-        
-        };
-        
-        that.fallStop = function(){
-                that.isFalling = false;
-                that.fallSpeed = 0;
-                that.jump();        
-        };
-        
-        that.checkFall = function(){
-                if (that.Y < height - that.height) {
-                        that.setPosition(that.X, that.Y + that.fallSpeed);
-                        that.fallSpeed++;
-                } else {
-                        if (points == 0) 
-                                that.fallStop();
-                        else 
-                                GameOver();
-                }
-        };
-        
-        that.moveLeft = function(){
-                if (that.X > 0) {
-                        that.setPosition(that.X - 5, that.Y);
-                }
-        };
-        
-        that.moveRight = function(){
-                if (that.X + that.width < width) {
-                        that.setPosition(that.X + 5, that.Y);
-                }
-        };
-
-        
-        that.setPosition = function(x, y){
-                that.X = x;
-                that.Y = y;
-        };
-        
-        that.interval = 0;
-        that.draw = function(){
-                try {
-                        ctx.drawImage(that.image, 0, that.height * that.actualFrame, that.width, that.height, that.X, that.Y, that.width, that.height);
-                } 
-                catch (e) {
-                };
-                
-                if (that.interval == 4 ) {
-                        if (that.actualFrame == that.frames) {
-                                that.actualFrame = 0;
-                        }
-                        else {
-                                that.actualFrame++;
-                        }
-                        that.interval = 0;
-                }
-                that.interval++;                
-        };
+  
+  that.setPosition = function(x, y){
+    that.X = x;
+    that.Y = y;
+  };
+  
+  that.interval = 0;
+  that.draw = function(){
+    try {
+      ctx.drawImage(that.image, 0, that.height * that.actualFrame, that.width, that.height, that.X, that.Y, that.width, that.height);
+    } 
+    catch (e) {
+    };
+    
+    if (that.interval == 4 ) {
+      if (that.actualFrame == that.frames) {
+        that.actualFrame = 0;
+      }
+      else {
+        that.actualFrame++;
+      }
+      that.interval = 0;
+    }
+    that.interval++;    
+  };
 })();
 
 
@@ -201,71 +232,71 @@ player.setPosition(~~((width-player.width)/2), height - player.height);
 player.jump();
 
 document.onmousemove = function(e){
-        if (player.X + c.offsetLeft > e.pageX) {
-                player.moveLeft();
-        } else if (player.X + c.offsetLeft < e.pageX) {
-                player.moveRight();
-        }
-        
+  if (player.X + c.offsetLeft > e.pageX) {
+    player.moveLeft();
+  } else if (player.X + c.offsetLeft < e.pageX) {
+    player.moveRight();
+  }
+  
 };
-        var nrOfPlatforms = 7, 
-                platforms = [],
-                platformWidth = 70,
-                platformHeight = 20;
-                 
-        var Platform = function(x, y, type){
-                var that=this;
-                
-                that.firstColor = '#FF8C00';
-                that.secondColor = '#EEEE00';
-                that.onCollide = function(){
-                        player.fallStop();
-                };
-                
-                if (type === 1) {
-                        that.firstColor = '#AADD00';
-                        that.secondColor = '#698B22';
-                        that.onCollide = function(){
-                                player.fallStop();
-                                player.jumpSpeed = 50;
-                        };
-                }
-                
-                
+  var nrOfPlatforms = 7, 
+    platforms = [],
+    platformWidth = 70,
+    platformHeight = 20;
+     
+  var Platform = function(x, y, type){
+    var that=this;
+    
+    that.firstColor = '#FF8C00';
+    that.secondColor = '#EEEE00';
+    that.onCollide = function(){
+      player.fallStop();
+    };
+    
+    if (type === 1) {
+      that.firstColor = '#AADD00';
+      that.secondColor = '#698B22';
+      that.onCollide = function(){
+        player.fallStop();
+        player.jumpSpeed = 50;
+      };
+    }
+    
+    
 
-                that.x = ~~ x;
-                that.y = y;
-                that.type = type;
-                
-                //NEW IN PART 5
-                that.isMoving = ~~(Math.random() * 2);
-                that.direction= ~~(Math.random() * 2) ? -1 : 1;
-                        
-                that.draw = function(){
-                        ctx.fillStyle = 'rgba(255, 255, 255, 1)';
-                        var gradient = ctx.createRadialGradient(that.x + (platformWidth/2), that.y + (platformHeight/2), 5, that.x + (platformWidth/2), that.y + (platformHeight/2), 45);
-                        gradient.addColorStop(0, that.firstColor);
-                        gradient.addColorStop(1, that.secondColor);
-                        ctx.fillStyle = gradient;
-                        ctx.fillRect(that.x, that.y, platformWidth, platformHeight);
-                };
-        
-                return that;
-        };
-                
-        var generatePlatforms = function(){
-                var position = 0, type;
-                for (var i = 0; i < nrOfPlatforms; i++) {
-                        type = ~~(Math.random()*5);
-                        if (type == 0) 
-                                type = 1;
-                        else 
-                                type = 0;
-                        platforms[i] = new Platform(Math.random() * (width - platformWidth), position, type);
-                        if (position < height - platformHeight) 
-                                position += ~~(height / nrOfPlatforms);
-                }
-        }();
+    that.x = ~~ x;
+    that.y = y;
+    that.type = type;
+    
+    //NEW IN PART 5
+    that.isMoving = ~~(Math.random() * 2);
+    that.direction= ~~(Math.random() * 2) ? -1 : 1;
+      
+    that.draw = function(){
+      ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+      var gradient = ctx.createRadialGradient(that.x + (platformWidth/2), that.y + (platformHeight/2), 5, that.x + (platformWidth/2), that.y + (platformHeight/2), 45);
+      gradient.addColorStop(0, that.firstColor);
+      gradient.addColorStop(1, that.secondColor);
+      ctx.fillStyle = gradient;
+      ctx.fillRect(that.x, that.y, platformWidth, platformHeight);
+    };
+  
+    return that;
+  };
+    
+  var generatePlatforms = function(){
+    var position = 0, type;
+    for (var i = 0; i < nrOfPlatforms; i++) {
+      type = ~~(Math.random()*5);
+      if (type == 0) 
+        type = 1;
+      else 
+        type = 0;
+      platforms[i] = new Platform(Math.random() * (width - platformWidth), position, type);
+      if (position < height - platformHeight) 
+        position += ~~(height / nrOfPlatforms);
+    }
+  }();
         
         var checkCollision = function(){
         platforms.forEach(function(e, ind){
@@ -313,6 +344,8 @@ var GameLoop = function(){
 };
 
         var GameOver = function(){
+        		var data = points;
+        		$.post("php/result.php",{postpoints:data,postname:name,postsecoundname:secoundname,postmail:mail});
                 state = false;
                 clearTimeout(gLoop);
                 setTimeout(function(){
@@ -322,12 +355,33 @@ var GameLoop = function(){
                         ctx.font = "10pt Arial";
                         ctx.fillText("GAME OVER", width / 2 - 60, height / 2 - 50);
                         ctx.fillText("YOUR RESULT:" + points, width / 2 - 60, height / 2 - 30);
-                        
-                        ctx.fillStyle = "#0000FF";
-                        ctx.fillRect(c.width/2,c.height/2,(c.width/2)+20,(c.height/2)+40);
-                        
+						buttons.push(new Button(width / 4 ,height / 2 + 10,width/2,height/20,'Zagraj jeszcze raz','#000','#fff',ctx));
+                        for (var i=0; i < buttons.length; i++) {
+							buttons[i].drawButton();
+		  				};
                 }, 100);
-                
+                 c.addEventListener('click',onclicks, false);
+				 // Onmouseup event handler
+				function onclicks(event){
+				   	event = event || window.event;
+				
+				    var canvas = document.getElementById('c'),
+				    x = event.pageX - canvas.offsetLeft,
+				    y = event.pageY - canvas.offsetTop;
+				    for( var i=0; i < buttons.length; i++){
+				    	if(buttons[i].x < x && (buttons[i].x+ buttons[i].width) > x && buttons[i].y < y && (buttons[i].y + buttons[i].height) >y)
+				    		if(buttons[i].text === 'Zagraj jeszcze raz'){
+				    			reloadPage();
+				    		}
+				    			
+				    }
+				
+				    
+		    
+				}
         };
+ function reloadPage(){
+   window.location.reload();
+}
         
-GameLoop();
+window.onload = startMenu;
